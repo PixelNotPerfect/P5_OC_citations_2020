@@ -3,6 +3,7 @@ import { PROVIDERS, PROVIDER_IDS } from '../providers'
 import type { ProviderId } from '../providers'
 import { modeleChoisi } from '../lib/reglages'
 import type { Reglages } from '../lib/reglages'
+import { IconeFermer } from './Icones'
 
 const AUTRE = '__autre__'
 
@@ -43,128 +44,119 @@ export function FenetreReglages({ reglages, onEnregistrer, onFermer }: Props) {
   }
 
   return (
-    <>
-      <div
-        className="modal d-block"
+    <div className="fond-modale" onMouseDown={(e) => e.target === e.currentTarget && onFermer()}>
+      <form
+        className="modale"
         role="dialog"
         aria-modal="true"
         aria-labelledby="titre-reglages"
-        onClick={(e) => e.target === e.currentTarget && onFermer()}
+        onSubmit={(e) => {
+          e.preventDefault()
+          onEnregistrer(brouillon)
+        }}
       >
-        <div className="modal-dialog modal-dialog-centered" role="document">
-          <form
-            className="modal-content"
-            onSubmit={(e) => {
-              e.preventDefault()
-              onEnregistrer(brouillon)
-            }}
-          >
-            <div className="modal-header">
-              <h5 className="modal-title" id="titre-reglages">
-                Réglages de l'IA
-              </h5>
-              <button type="button" className="close" aria-label="Fermer" onClick={onFermer}>
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-
-            <div className="modal-body">
-              <div className="form-group">
-                <label htmlFor="provider">Fournisseur</label>
-                <select
-                  id="provider"
-                  className="form-control"
-                  value={provider}
-                  onChange={(e) => changerProvider(e.target.value as ProviderId)}
-                >
-                  {PROVIDER_IDS.map((p) => (
-                    <option key={p} value={p}>
-                      {PROVIDERS[p].nom}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="modele">Modèle</label>
-                <select
-                  id="modele"
-                  className="form-control"
-                  value={saisieLibre ? AUTRE : modele}
-                  onChange={(e) => {
-                    if (e.target.value === AUTRE) {
-                      setSaisieLibre(true)
-                    } else {
-                      setSaisieLibre(false)
-                      changerModele(e.target.value)
-                    }
-                  }}
-                >
-                  {infos.modeles.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.nom} ({m.id})
-                    </option>
-                  ))}
-                  <option value={AUTRE}>Autre modèle…</option>
-                </select>
-                {saisieLibre && (
-                  <input
-                    className="form-control mt-2"
-                    placeholder="Identifiant du modèle"
-                    aria-label="Identifiant du modèle"
-                    value={brouillon.modeles[provider] ?? ''}
-                    onChange={(e) => changerModele(e.target.value)}
-                    required
-                  />
-                )}
-              </div>
-
-              <div className="form-group mb-0">
-                <label htmlFor="cle">Clé API {infos.nom}</label>
-                <div className="input-group">
-                  <input
-                    id="cle"
-                    className="form-control"
-                    type={afficherCle ? 'text' : 'password'}
-                    autoComplete="off"
-                    spellCheck={false}
-                    placeholder="Laisser vide pour utiliser la clé du serveur"
-                    value={brouillon.cles[provider] ?? ''}
-                    onChange={(e) => changerCle(e.target.value)}
-                  />
-                  <div className="input-group-append">
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary"
-                      onClick={() => setAfficherCle(!afficherCle)}
-                    >
-                      {afficherCle ? 'Masquer' : 'Afficher'}
-                    </button>
-                  </div>
-                </div>
-                <small className="form-text text-muted">
-                  Obtenir une clé :{' '}
-                  <a href={infos.urlCle} target="_blank" rel="noreferrer">
-                    {new URL(infos.urlCle).host}
-                  </a>
-                  . Elle est enregistrée uniquement dans ce navigateur et transmise au serveur de l'application à
-                  chaque génération, sans y être conservée.
-                </small>
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <button type="button" className="btn btn-outline-secondary" onClick={onFermer}>
-                Annuler
-              </button>
-              <button type="submit" className="btn generate mr-0">
-                Enregistrer
-              </button>
-            </div>
-          </form>
+        <div className="modale__entete">
+          <h2 id="titre-reglages">Réglages de l'IA</h2>
+          <button type="button" className="modale__fermer" aria-label="Fermer" onClick={onFermer}>
+            <IconeFermer />
+          </button>
         </div>
-      </div>
-      <div className="modal-backdrop show" />
-    </>
+
+        <div className="modale__corps">
+          <div className="champ">
+            <span className="champ__label" id="label-provider">
+              Fournisseur
+            </span>
+            <div className="fournisseurs" role="radiogroup" aria-labelledby="label-provider">
+              {PROVIDER_IDS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  role="radio"
+                  aria-checked={p === provider}
+                  className={`fournisseur${p === provider ? ' fournisseur--actif' : ''}`}
+                  onClick={() => changerProvider(p)}
+                >
+                  {PROVIDERS[p].nom}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="champ">
+            <label className="champ__label" htmlFor="modele">
+              Modèle
+            </label>
+            <select
+              id="modele"
+              className="champ__saisie"
+              value={saisieLibre ? AUTRE : modele}
+              onChange={(e) => {
+                if (e.target.value === AUTRE) {
+                  setSaisieLibre(true)
+                } else {
+                  setSaisieLibre(false)
+                  changerModele(e.target.value)
+                }
+              }}
+            >
+              {infos.modeles.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.nom} ({m.id})
+                </option>
+              ))}
+              <option value={AUTRE}>Autre modèle…</option>
+            </select>
+            {saisieLibre && (
+              <input
+                className="champ__saisie"
+                placeholder="Identifiant du modèle, ex. mistralai/mistral-small"
+                aria-label="Identifiant du modèle"
+                value={brouillon.modeles[provider] ?? ''}
+                onChange={(e) => changerModele(e.target.value)}
+                required
+              />
+            )}
+          </div>
+
+          <div className="champ">
+            <label className="champ__label" htmlFor="cle">
+              Clé API {infos.nom}
+            </label>
+            <div className="champ__groupe">
+              <input
+                id="cle"
+                className="champ__saisie"
+                type={afficherCle ? 'text' : 'password'}
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="Facultatif : sinon, clé du serveur"
+                value={brouillon.cles[provider] ?? ''}
+                onChange={(e) => changerCle(e.target.value)}
+              />
+              <button type="button" className="bouton bouton--secondaire" onClick={() => setAfficherCle(!afficherCle)}>
+                {afficherCle ? 'Masquer' : 'Afficher'}
+              </button>
+            </div>
+            <p className="champ__aide">
+              <a href={infos.urlCle} target="_blank" rel="noreferrer">
+                Obtenir une clé {infos.nom}
+              </a>
+              . Elle reste dans ce navigateur et n'est envoyée au serveur de l'application qu'au moment de générer,
+              sans y être conservée.
+            </p>
+          </div>
+        </div>
+
+        <div className="modale__pied">
+          <button type="button" className="bouton bouton--secondaire" onClick={onFermer}>
+            Annuler
+          </button>
+          <button type="submit" className="bouton bouton--principal">
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    </div>
   )
 }

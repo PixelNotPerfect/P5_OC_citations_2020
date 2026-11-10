@@ -6,16 +6,31 @@ import { THEMES } from '../themes'
 import type { Citation, Theme } from '../themes'
 import { PROVIDERS } from '../providers'
 import { FenetreReglages } from '../components/FenetreReglages'
+import { IconeCopier, IconeReglages, IconeValider } from '../components/Icones'
 import { modeleChoisi, useReglages } from '../lib/reglages'
 
 export const Route = createFileRoute('/')({
   component: Accueil,
 })
 
+const MIN = 1
+const MAX = 10
+
+const LEGENDE = [
+  { classe: 'intro', nom: 'Introduction' },
+  { classe: 'cause', nom: 'Cause' },
+  { classe: 'raison', nom: 'Raison' },
+  { classe: 'solution', nom: 'Solution' },
+] as const
+
+function texteComplet(c: Citation) {
+  return [c.intro, c.cause, c.raison, c.solution].join(' ')
+}
+
 function Accueil() {
   const generer = useServerFn(genererCitations)
-  const [nombre, setNombre] = useState('1')
-  const [titre, setTitre] = useState('Vos citations seront générées ici.')
+  const [nombre, setNombre] = useState(3)
+  const [theme, setTheme] = useState<Theme | null>(null)
   const [citations, setCitations] = useState<Citation[]>([])
   const [erreur, setErreur] = useState('')
   const [enCours, setEnCours] = useState(false)
@@ -23,104 +38,166 @@ function Accueil() {
   const [reglagesOuverts, setReglagesOuverts] = useState(false)
   const modele = modeleChoisi(reglages)
 
-  async function lancer(theme: Theme) {
-    const n = Number(nombre)
-    if (!Number.isInteger(n) || n < 1 || n > 10) {
-      setErreur('Veuillez saisir un nombre entier compris entre 1 et 10 inclus.')
-      return
-    }
+  async function lancer(choix: Theme) {
     setErreur('')
     setEnCours(true)
-    setTitre(THEMES[theme].titre)
+    setTheme(choix)
     setCitations([])
     try {
       setCitations(
         await generer({
-          data: { theme, nombre: n, provider: reglages.provider, modele, cle: reglages.cles[reglages.provider] },
+          data: {
+            theme: choix,
+            nombre,
+            provider: reglages.provider,
+            modele,
+            cle: reglages.cles[reglages.provider],
+          },
         }),
       )
     } catch (e) {
       console.error(e)
-      const detail = e instanceof Error && e.message ? ` (${e.message})` : ''
-      setErreur(`L'IA n'a pas pu générer de citations${detail}. Vérifiez vos réglages ou réessayez.`)
+      setErreur(e instanceof Error && e.message ? e.message : 'Erreur inconnue.')
     } finally {
       setEnCours(false)
     }
   }
 
   return (
-    <>
-      <main className="flex-shrink-0">
-        <header className="position-relative">
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-light bouton-reglages"
-            onClick={() => setReglagesOuverts(true)}
-          >
-            ⚙ Réglages
+    <div className="page">
+      <header className="entete">
+        <div className="entete__barre">
+          <span className="entete__logo" aria-hidden="true">
+            🎙️
+          </span>
+          <button type="button" className="bouton-icone" onClick={() => setReglagesOuverts(true)}>
+            <IconeReglages />
+            <span>Réglages</span>
           </button>
-          <h1>Rhétoritron vs Plaidoritron</h1>
-          <h4>Votre générateur d'éloquence</h4>
-        </header>
+        </div>
+        <h1 className="entete__titre">
+          Rhétoritron <em>vs</em> Plaidoritron
+        </h1>
+        <p className="entete__sous-titre">Votre générateur d'éloquence</p>
+        <div className="drapeau" aria-hidden="true" />
+      </header>
 
-        <section className="formulaire">
-          <div className="container">
-            <p className="lead">
-              Vous souhaitez impressionner vos amis ou vous entrainer au prochain concours d'éloquence ? <br />
-              Vous souhaitez parler comme un homme politique ou un avocat ? <br />
-            </p>
-            <p>
-              Choisissez un nombre entre 1 et 10, puis cliquez sur "Politique" ou "Droit" en fonction de vos
-              aspirations. <br />
-              A vos clics !
-            </p>
-            <div className="form-group w-25 mx-auto">
-              <input
-                className="number form-control"
-                type="number"
-                name="number"
-                id="number"
-                min={1}
-                max={10}
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-              />
+      <main className="contenu">
+        <section className="carte formulaire" aria-labelledby="titre-formulaire">
+          <h2 id="titre-formulaire" className="formulaire__titre">
+            Impressionnez vos amis, briguez le prochain concours d'éloquence.
+          </h2>
+          <p className="formulaire__intro">
+            Choisissez combien de citations vous voulez, puis votre camp : la tribune ou le prétoire.
+          </p>
+
+          <div className="compteur" role="group" aria-label="Nombre de citations">
+            <span className="compteur__label">Nombre de citations</span>
+            <div className="compteur__controle">
+              <button
+                type="button"
+                className="compteur__bouton"
+                onClick={() => setNombre(Math.max(MIN, nombre - 1))}
+                disabled={nombre <= MIN || enCours}
+                aria-label="Une citation de moins"
+              >
+                −
+              </button>
+              <output className="compteur__valeur" aria-live="polite">
+                {nombre}
+              </output>
+              <button
+                type="button"
+                className="compteur__bouton"
+                onClick={() => setNombre(Math.min(MAX, nombre + 1))}
+                disabled={nombre >= MAX || enCours}
+                aria-label="Une citation de plus"
+              >
+                +
+              </button>
             </div>
-
-            <button className="generate btn" type="button" disabled={enCours} onClick={() => lancer('politique')}>
-              Politique
-            </button>
-            <button className="generate btn mr-0" type="button" disabled={enCours} onClick={() => lancer('droit')}>
-              Droit
-            </button>
-
-            <div className="text-danger mt-2">{erreur}</div>
-            <p className="small mt-3 mb-0">
-              IA : {PROVIDERS[reglages.provider].nom} · {modele}
-              {reglages.cles[reglages.provider] ? ' · votre clé' : ''}
-            </p>
           </div>
+
+          <div className="choix-theme">
+            {(Object.keys(THEMES) as Theme[]).map((t) => (
+              <button
+                key={t}
+                type="button"
+                className={`theme theme--${t}${theme === t && enCours ? ' theme--actif' : ''}`}
+                onClick={() => lancer(t)}
+                disabled={enCours}
+              >
+                <span className="theme__icone" aria-hidden="true">
+                  {THEMES[t].icone}
+                </span>
+                <span className="theme__nom">{THEMES[t].nom}</span>
+                <span className="theme__description">{THEMES[t].description}</span>
+              </button>
+            ))}
+          </div>
+
+          <p className="modele">
+            <span className="modele__pastille" aria-hidden="true" />
+            {PROVIDERS[reglages.provider].nom} · <code>{modele}</code>
+            {reglages.cles[reglages.provider] ? ' · votre clé' : ''}
+            <button type="button" className="lien" onClick={() => setReglagesOuverts(true)}>
+              Modifier
+            </button>
+          </p>
         </section>
 
-        <section className="citation">
-          <div className="container">
-            <h5 className="text-center mb-4">{titre}</h5>
-            {enCours && <p className="text-center text-muted">L'IA prépare votre discours…</p>}
-            <div>
-              {citations.map((c, i) => (
-                <p key={i}>
-                  <span className="intro">{c.intro}</span> <span className="cause">{c.cause}</span>{' '}
-                  <span className="raison">{c.raison}</span> <span className="solution">{c.solution}</span>
-                </p>
-              ))}
+        <section className="resultats" aria-live="polite" aria-busy={enCours}>
+          {erreur && (
+            <div className="alerte" role="alert">
+              <strong>L'IA n'a pas pu répondre.</strong>
+              <span>{erreur}</span>
+              <span className="alerte__aide">
+                Vérifiez votre clé et votre modèle dans les{' '}
+                <button type="button" className="lien" onClick={() => setReglagesOuverts(true)}>
+                  réglages
+                </button>
+                , puis réessayez.
+              </span>
             </div>
-          </div>
+          )}
+
+          {!theme && !erreur && (
+            <div className="vide">
+              <p className="vide__guillemets" aria-hidden="true">
+                «&nbsp;»
+              </p>
+              <p>Vos citations apparaîtront ici.</p>
+            </div>
+          )}
+
+          {theme && !erreur && (
+            <>
+              <h2 className="resultats__titre">{THEMES[theme].titre}</h2>
+              {enCours && <p className="resultats__attente">L'IA prépare votre discours…</p>}
+              <ol className="liste-citations">
+                {enCours
+                  ? Array.from({ length: nombre }, (_, i) => <li key={i} className="citation citation--squelette" />)
+                  : citations.map((c, i) => <CarteCitation key={i} citation={c} />)}
+              </ol>
+              {!enCours && citations.length > 0 && (
+                <ul className="legende" aria-label="Légende">
+                  {LEGENDE.map((l) => (
+                    <li key={l.classe} className={`legende__item legende__item--${l.classe}`}>
+                      {l.nom}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
         </section>
       </main>
 
-      <footer className="mt-auto">
+      <footer className="pied">
+        <div className="drapeau" aria-hidden="true" />
         <p>
-          &copy; 2020 Copyright <a href="http://cv.juliemolla.fr/">Julie Molla</a>
+          © 2020 <a href="http://cv.juliemolla.fr/">Julie Molla</a> · Citations générées par IA, à ne pas prendre au
+          sérieux.
         </p>
       </footer>
 
@@ -134,6 +211,33 @@ function Accueil() {
           }}
         />
       )}
-    </>
+    </div>
+  )
+}
+
+function CarteCitation({ citation }: { citation: Citation }) {
+  const [copie, setCopie] = useState(false)
+
+  async function copier() {
+    try {
+      await navigator.clipboard.writeText(texteComplet(citation))
+      setCopie(true)
+      setTimeout(() => setCopie(false), 1500)
+    } catch {
+      // Presse-papiers indisponible : on ne fait rien.
+    }
+  }
+
+  return (
+    <li className="citation">
+      <blockquote className="citation__texte">
+        <span className="intro">{citation.intro}</span> <span className="cause">{citation.cause}</span>{' '}
+        <span className="raison">{citation.raison}</span> <span className="solution">{citation.solution}</span>
+      </blockquote>
+      <button type="button" className="citation__copier" onClick={copier} aria-label="Copier la citation">
+        {copie ? <IconeValider /> : <IconeCopier />}
+        <span>{copie ? 'Copiée' : 'Copier'}</span>
+      </button>
+    </li>
   )
 }

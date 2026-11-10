@@ -200,7 +200,7 @@ function Accueil() {
       <footer className="pied">
         <div className="drapeau" aria-hidden="true" />
         <p>
-          © 2020 <a href="http://cv.juliemolla.fr/">Julie Molla</a> · Citations générées par IA, à ne pas prendre au
+          © 2020 JpegPasPeur · Citations générées par IA, à ne pas prendre au
           sérieux.
         </p>
       </footer>

@@ -21,6 +21,10 @@ Chaque citation est un court passage découpé en quatre morceaux qui s'enchaîn
 - solution : un appel final à la justice et à la conscience de la cour`,
 }
 
+// Routeur OpenRouter qui choisit au hasard un modèle gratuit disponible.
+// Il n'est pas encore dans la liste typée du SDK, d'où le cast.
+const MODELE = 'openrouter/free' as Parameters<typeof openRouterText>[0]
+
 const CitationsSchema = z.object({
   citations: z.array(
     z.object({
@@ -43,7 +47,7 @@ export const genererCitations = createServerFn({ method: 'POST' })
     const consigne = CONSIGNES[data.theme]
 
     const resultat = await chat({
-      adapter: openRouterText('anthropic/claude-sonnet-5.5'),
+      adapter: openRouterText(MODELE),
       systemPrompts: [
         `${consigne}
 Écris en français, avec une ponctuation soignée. Les citations doivent être originales, variées entre elles et ne citer aucune personne réelle.
@@ -57,6 +61,9 @@ Les quatre morceaux, mis bout à bout avec un espace, doivent former un texte fl
       ],
       threadId: crypto.randomUUID(),
       outputSchema: CitationsSchema,
+      // Mode JSON simple : compris par davantage de modèles gratuits que le JSON Schema strict.
+      // Le schéma est alors ajouté au prompt et la réponse reste validée par Zod.
+      modelOptions: { responseFormat: { type: 'json_object' } },
     })
 
     return resultat.citations.slice(0, data.nombre)

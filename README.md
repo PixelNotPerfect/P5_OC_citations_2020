@@ -20,6 +20,6 @@ npm run dev            # http://localhost:3000
 ## Organisation
 
 - `src/routes/index.tsx` : la page (formulaire et affichage des citations)
-- `src/server/citations.ts` : la fonction serveur `genererCitations`, qui appelle un modèle via OpenRouter (`anthropic/claude-sonnet-5.5` par défaut, modifiable dans ce fichier) avec une sortie structurée
+- `src/server/citations.ts` : la fonction serveur `genererCitations`, qui appelle un modèle via OpenRouter (`openrouter/free` par défaut, qui choisit un modèle gratuit ; modifiable dans ce fichier) avec une sortie structurée
   (intro, cause, raison, solution) validée par Zod. La clé API et les consignes restent côté serveur.
 - `src/themes.ts` : thèmes et types partagés entre le client et le serveur

@@ -94,8 +94,9 @@ export const genererCitations = createServerFn({ method: 'POST' })
         `${consigne}
 Le but est de faire rire : vise l'humour par le décalage entre le ton sérieux et le contenu absurde, avec une vraie
 chute dans le dernier morceau. Évite les blagues attendues, la vulgarité et l'humour méchant envers des groupes de personnes.
-Écris en français, avec une ponctuation et des majuscules soignées : toute phrase commence par une majuscule,
-y compris quand un morceau commence juste après un point du morceau précédent. Les citations doivent être originales, très variées entre elles
+Écris en français, avec une ponctuation et des majuscules soignées : les morceaux sont des bouts d'un même texte,
+pas des phrases séparées. Un morceau commence par une minuscule quand il continue la phrase du morceau précédent,
+et par une majuscule seulement s'il suit un point (ou un « ! », un « ? », des points de suspension) ou s'il commence par un nom propre. Les citations doivent être originales, très variées entre elles
 (sujets et situations différents) et ne citer aucune personne réelle.
 Les quatre morceaux, mis bout à bout avec un espace, doivent former un texte fluide.`,
       ],

@@ -14,7 +14,7 @@ npm run dev            # http://localhost:3000
 ```
 
 - `npm run build` : build de production
-- `npm run start` : sert le build de production
+- `npm run start` : construit puis sert la version de production (http://localhost:4173)
 - `npm run typecheck` : vérification TypeScript
 
 ## Organisation

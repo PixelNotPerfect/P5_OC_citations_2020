@@ -11,6 +11,7 @@ import { z } from 'zod'
 import { PROVIDERS, PROVIDER_IDS } from '../providers'
 import type { ProviderId } from '../providers'
 import type { Theme } from '../themes'
+import { corrigerMajuscules } from './majuscules'
 
 // Code exécuté uniquement côté serveur : la clé API et les consignes ne partent jamais au navigateur.
 
@@ -93,7 +94,8 @@ export const genererCitations = createServerFn({ method: 'POST' })
         `${consigne}
 Le but est de faire rire : vise l'humour par le décalage entre le ton sérieux et le contenu absurde, avec une vraie
 chute dans le dernier morceau. Évite les blagues attendues, la vulgarité et l'humour méchant envers des groupes de personnes.
-Écris en français, avec une ponctuation soignée. Les citations doivent être originales, très variées entre elles
+Écris en français, avec une ponctuation et des majuscules soignées : toute phrase commence par une majuscule,
+y compris quand un morceau commence juste après un point du morceau précédent. Les citations doivent être originales, très variées entre elles
 (sujets et situations différents) et ne citer aucune personne réelle.
 Les quatre morceaux, mis bout à bout avec un espace, doivent former un texte fluide.`,
       ],
@@ -110,5 +112,5 @@ Les quatre morceaux, mis bout à bout avec un espace, doivent former un texte fl
       modelOptions: data.provider === 'openrouter' ? { responseFormat: { type: 'json_object' } } : undefined,
     })
 
-    return resultat.citations.slice(0, data.nombre)
+    return resultat.citations.slice(0, data.nombre).map(corrigerMajuscules)
   })

@@ -17,6 +17,18 @@ header h1 {
     font-family: cursive;
 }
 
+.btn-ia {
+    background-color: white;
+    color: #0055A4;
+    border: 2px solid white;
+    font-weight: bold;
+}
+
+.btn-ia:hover, .btn-ia:focus {
+    background-color: transparent;
+    color: white;
+}
+
 footer a, footer a:hover {
     color: #dadada;
 }

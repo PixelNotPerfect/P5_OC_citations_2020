@@ -1,7 +1,15 @@
 import { createServerFn } from '@tanstack/react-start'
 import { chat } from '@tanstack/ai'
-import { openRouterText } from '@tanstack/ai-openrouter'
+import type { AnyTextAdapter } from '@tanstack/ai'
+import { createOpenRouterText } from '@tanstack/ai-openrouter'
+import { createOpenaiChat } from '@tanstack/ai-openai'
+import { createAnthropicChat } from '@tanstack/ai-anthropic'
+import { createGeminiChat } from '@tanstack/ai-gemini'
+import { createMistralText } from '@tanstack/ai-mistral'
+import { createGrokText } from '@tanstack/ai-grok'
 import { z } from 'zod'
+import { PROVIDERS, PROVIDER_IDS } from '../providers'
+import type { ProviderId } from '../providers'
 import type { Theme } from '../themes'
 
 // Code exécuté uniquement côté serveur : la clé API et les consignes ne partent jamais au navigateur.
@@ -21,9 +29,26 @@ Chaque citation est un court passage découpé en quatre morceaux qui s'enchaîn
 - solution : un appel final à la justice et à la conscience de la cour`,
 }
 
-// Routeur OpenRouter qui choisit au hasard un modèle gratuit disponible.
-// Il n'est pas encore dans la liste typée du SDK, d'où le cast.
-const MODELE = 'openrouter/free' as Parameters<typeof openRouterText>[0]
+// Le modèle est choisi librement dans les réglages : il peut ne pas figurer dans les listes
+// typées des SDK (ex. le routeur gratuit « openrouter/free »), d'où les casts ci-dessous.
+type Modele<F extends (model: never, ...args: never[]) => unknown> = Parameters<F>[0]
+
+function creerAdaptateur(provider: ProviderId, modele: string, cle: string): AnyTextAdapter {
+  switch (provider) {
+    case 'openrouter':
+      return createOpenRouterText(modele as Modele<typeof createOpenRouterText>, cle)
+    case 'openai':
+      return createOpenaiChat(modele as Modele<typeof createOpenaiChat>, cle)
+    case 'anthropic':
+      return createAnthropicChat(modele as Modele<typeof createAnthropicChat>, cle)
+    case 'gemini':
+      return createGeminiChat(modele as Modele<typeof createGeminiChat>, cle)
+    case 'mistral':
+      return createMistralText(modele as Modele<typeof createMistralText>, cle)
+    case 'grok':
+      return createGrokText(modele as Modele<typeof createGrokText>, cle)
+  }
+}
 
 const CitationsSchema = z.object({
   citations: z.array(
@@ -39,15 +64,24 @@ const CitationsSchema = z.object({
 const InputSchema = z.object({
   theme: z.enum(['politique', 'droit']),
   nombre: z.number().int().min(1).max(10),
+  provider: z.enum(PROVIDER_IDS as [ProviderId, ...ProviderId[]]),
+  modele: z.string().trim().min(1).max(200),
+  // Clé saisie par l'utilisateur dans les réglages. Vide : on utilise celle du serveur (.env).
+  cle: z.string().trim().max(500).optional(),
 })
 
 export const genererCitations = createServerFn({ method: 'POST' })
   .validator(InputSchema)
   .handler(async ({ data }) => {
     const consigne = CONSIGNES[data.theme]
+    const { nom, envVar } = PROVIDERS[data.provider]
+    const cle = data.cle || process.env[envVar]
+    if (!cle) {
+      throw new Error(`Aucune clé API ${nom}. Ajoutez la vôtre dans les réglages.`)
+    }
 
     const resultat = await chat({
-      adapter: openRouterText(MODELE),
+      adapter: creerAdaptateur(data.provider, data.modele, cle),
       systemPrompts: [
         `${consigne}
 Écris en français, avec une ponctuation soignée. Les citations doivent être originales, variées entre elles et ne citer aucune personne réelle.
@@ -61,9 +95,9 @@ Les quatre morceaux, mis bout à bout avec un espace, doivent former un texte fl
       ],
       threadId: crypto.randomUUID(),
       outputSchema: CitationsSchema,
-      // Mode JSON simple : compris par davantage de modèles gratuits que le JSON Schema strict.
-      // Le schéma est alors ajouté au prompt et la réponse reste validée par Zod.
-      modelOptions: { responseFormat: { type: 'json_object' } },
+      // OpenRouter : mode JSON simple, compris par davantage de modèles (dont les gratuits)
+      // que le JSON Schema strict. Le schéma est alors ajouté au prompt et la réponse reste validée par Zod.
+      modelOptions: data.provider === 'openrouter' ? { responseFormat: { type: 'json_object' } } : undefined,
     })
 
     return resultat.citations.slice(0, data.nombre)

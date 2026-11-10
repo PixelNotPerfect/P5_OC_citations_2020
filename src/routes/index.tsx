@@ -4,6 +4,9 @@ import { useServerFn } from '@tanstack/react-start'
 import { genererCitations } from '../server/citations'
 import { THEMES } from '../themes'
 import type { Citation, Theme } from '../themes'
+import { PROVIDERS } from '../providers'
+import { FenetreReglages } from '../components/FenetreReglages'
+import { modeleChoisi, useReglages } from '../lib/reglages'
 
 export const Route = createFileRoute('/')({
   component: Accueil,
@@ -16,6 +19,9 @@ function Accueil() {
   const [citations, setCitations] = useState<Citation[]>([])
   const [erreur, setErreur] = useState('')
   const [enCours, setEnCours] = useState(false)
+  const [reglages, enregistrerReglages] = useReglages()
+  const [reglagesOuverts, setReglagesOuverts] = useState(false)
+  const modele = modeleChoisi(reglages)
 
   async function lancer(theme: Theme) {
     const n = Number(nombre)
@@ -28,10 +34,15 @@ function Accueil() {
     setTitre(THEMES[theme].titre)
     setCitations([])
     try {
-      setCitations(await generer({ data: { theme, nombre: n } }))
+      setCitations(
+        await generer({
+          data: { theme, nombre: n, provider: reglages.provider, modele, cle: reglages.cles[reglages.provider] },
+        }),
+      )
     } catch (e) {
       console.error(e)
-      setErreur("L'IA n'a pas pu générer de citations. Réessayez dans un instant.")
+      const detail = e instanceof Error && e.message ? ` (${e.message})` : ''
+      setErreur(`L'IA n'a pas pu générer de citations${detail}. Vérifiez vos réglages ou réessayez.`)
     } finally {
       setEnCours(false)
     }
@@ -40,7 +51,14 @@ function Accueil() {
   return (
     <>
       <main className="flex-shrink-0">
-        <header>
+        <header className="position-relative">
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-light bouton-reglages"
+            onClick={() => setReglagesOuverts(true)}
+          >
+            ⚙ Réglages
+          </button>
           <h1>Rhétoritron vs Plaidoritron</h1>
           <h4>Votre générateur d'éloquence</h4>
         </header>
@@ -77,6 +95,10 @@ function Accueil() {
             </button>
 
             <div className="text-danger mt-2">{erreur}</div>
+            <p className="small mt-3 mb-0">
+              IA : {PROVIDERS[reglages.provider].nom} · {modele}
+              {reglages.cles[reglages.provider] ? ' · votre clé' : ''}
+            </p>
           </div>
         </section>
 
@@ -101,6 +123,17 @@ function Accueil() {
           &copy; 2020 Copyright <a href="http://cv.juliemolla.fr/">Julie Molla</a>
         </p>
       </footer>
+
+      {reglagesOuverts && (
+        <FenetreReglages
+          reglages={reglages}
+          onFermer={() => setReglagesOuverts(false)}
+          onEnregistrer={(r) => {
+            enregistrerReglages(r)
+            setReglagesOuverts(false)
+          }}
+        />
+      )}
     </>
   )
 }

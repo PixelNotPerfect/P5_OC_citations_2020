@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { chat } from '@tanstack/ai'
-import { anthropicText } from '@tanstack/ai-anthropic'
+import { openRouterText } from '@tanstack/ai-openrouter'
 import { z } from 'zod'
 import type { Theme } from '../themes'
 
@@ -43,7 +43,7 @@ export const genererCitations = createServerFn({ method: 'POST' })
     const consigne = CONSIGNES[data.theme]
 
     const resultat = await chat({
-      adapter: anthropicText('claude-sonnet-5-5'),
+      adapter: openRouterText('anthropic/claude-sonnet-5.5'),
       systemPrompts: [
         `${consigne}
 Écris en français, avec une ponctuation soignée. Les citations doivent être originales, variées entre elles et ne citer aucune personne réelle.

@@ -174,11 +174,15 @@ function Accueil() {
             <>
               <h2 className="resultats__titre">{THEMES[theme].titre}</h2>
               {enCours && <p className="resultats__attente">L'IA prépare votre discours…</p>}
-              <ol className="liste-citations">
-                {enCours
-                  ? Array.from({ length: nombre }, (_, i) => <li key={i} className="citation citation--squelette" />)
-                  : citations.map((c, i) => <CarteCitation key={i} citation={c} />)}
-              </ol>
+              {enCours ? (
+                <div className="discours discours--chargement" aria-hidden="true">
+                  {Array.from({ length: Math.min(nombre * 3, 12) }, (_, i) => (
+                    <span key={i} className="discours__ligne" />
+                  ))}
+                </div>
+              ) : (
+                citations.length > 0 && <Discours citations={citations} />
+              )}
               {!enCours && citations.length > 0 && (
                 <ul className="legende" aria-label="Légende">
                   {LEGENDE.map((l) => (
@@ -215,12 +219,12 @@ function Accueil() {
   )
 }
 
-function CarteCitation({ citation }: { citation: Citation }) {
+function Discours({ citations }: { citations: Citation[] }) {
   const [copie, setCopie] = useState(false)
 
   async function copier() {
     try {
-      await navigator.clipboard.writeText(texteComplet(citation))
+      await navigator.clipboard.writeText(citations.map(texteComplet).join('\n\n'))
       setCopie(true)
       setTimeout(() => setCopie(false), 1500)
     } catch {
@@ -229,15 +233,19 @@ function CarteCitation({ citation }: { citation: Citation }) {
   }
 
   return (
-    <li className="citation">
-      <blockquote className="citation__texte">
-        <span className="intro">{citation.intro}</span> <span className="cause">{citation.cause}</span>{' '}
-        <span className="raison">{citation.raison}</span> <span className="solution">{citation.solution}</span>
-      </blockquote>
-      <button type="button" className="citation__copier" onClick={copier} aria-label="Copier la citation">
+    <article className="discours">
+      <div className="discours__texte">
+        {citations.map((c, i) => (
+          <p key={i}>
+            <span className="intro">{c.intro}</span> <span className="cause">{c.cause}</span>{' '}
+            <span className="raison">{c.raison}</span> <span className="solution">{c.solution}</span>
+          </p>
+        ))}
+      </div>
+      <button type="button" className="discours__copier" onClick={copier}>
         {copie ? <IconeValider /> : <IconeCopier />}
-        <span>{copie ? 'Copiée' : 'Copier'}</span>
+        <span>{copie ? 'Texte copié' : 'Copier le texte'}</span>
       </button>
-    </li>
+    </article>
   )
 }

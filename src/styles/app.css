@@ -364,54 +364,46 @@ code {
   color: var(--trait);
 }
 
-.liste-citations {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.citation {
+.discours {
   position: relative;
-  padding: 28px 28px 20px 56px;
+  padding: 36px 48px 28px;
   background: var(--papier);
   border-radius: var(--rayon);
   box-shadow: var(--ombre);
   animation: apparition 0.35s ease-out both;
 }
 
-.citation::before {
-  content: '«';
-  position: absolute;
-  top: 10px;
-  left: 18px;
-  font-family: var(--serif);
-  font-size: 3rem;
-  line-height: 1;
-  color: var(--bleu);
-  opacity: 0.25;
-}
-
-.citation:nth-child(2) {
-  animation-delay: 0.05s;
-}
-.citation:nth-child(3) {
-  animation-delay: 0.1s;
-}
-.citation:nth-child(n + 4) {
-  animation-delay: 0.15s;
-}
-
-.citation__texte {
-  margin: 0;
+.discours__texte {
   font-family: var(--serif);
   font-size: 1.15rem;
-  line-height: 1.7;
+  line-height: 1.8;
+  text-align: justify;
+  hyphens: auto;
 }
 
-.citation__texte span {
+.discours__texte p {
+  margin: 0;
+  text-indent: 1.5em;
+}
+
+.discours__texte p + p {
+  margin-top: 0.6em;
+}
+
+.discours__texte p:first-child {
+  text-indent: 0;
+}
+
+.discours__texte p:first-child::first-letter {
+  float: left;
+  margin: 0.08em 0.1em 0 0;
+  font-size: 3.4em;
+  font-weight: 700;
+  line-height: 0.8;
+  color: var(--bleu);
+}
+
+.discours__texte span {
   border-bottom: 2px solid transparent;
   transition:
     border-color 0.15s,
@@ -435,36 +427,43 @@ code {
   background: rgb(214 95 214 / 10%);
 }
 
-.citation__copier {
+.discours__copier {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 12px;
-  padding: 4px 10px;
+  margin-top: 20px;
+  padding: 6px 12px;
   border: 1px solid var(--trait);
   border-radius: 999px;
   background: transparent;
   color: var(--gris);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   cursor: pointer;
   transition:
     color 0.15s,
     border-color 0.15s;
 }
 
-.citation__copier:hover {
+.discours__copier:hover {
   color: var(--bleu);
   border-color: var(--bleu);
 }
 
-.citation--squelette {
-  height: 132px;
-  background: linear-gradient(90deg, #fff 0%, #f1ede5 50%, #fff 100%) 0 0 / 200% 100%;
+.discours--chargement {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.discours__ligne {
+  height: 14px;
+  border-radius: 7px;
+  background: linear-gradient(90deg, #f1ede5 0%, #e6e1d6 50%, #f1ede5 100%) 0 0 / 200% 100%;
   animation: chargement 1.2s linear infinite;
 }
 
-.citation--squelette::before {
-  content: none;
+.discours__ligne:nth-child(3n) {
+  width: 70%;
 }
 
 .legende {
@@ -772,16 +771,13 @@ code {
     font-size: 0.8rem;
   }
 
-  .citation {
-    padding: 24px 18px 16px 44px;
+  .discours {
+    padding: 36px 20px 22px;
   }
 
-  .citation::before {
-    left: 12px;
-  }
-
-  .citation__texte {
+  .discours__texte {
     font-size: 1.05rem;
+    text-align: left;
   }
 
   .fournisseurs {

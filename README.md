@@ -26,6 +26,16 @@ npm run dev            # http://localhost:3000
 - `npm run start` : construit puis sert la version de production (http://localhost:4173)
 - `npm run typecheck` : vérification TypeScript
 
+## Déployer sur Vercel
+
+Le plugin Nitro (`nitro/vite`) détecte Vercel au moment du build et génère `.vercel/output` : aucune config supplémentaire n'est nécessaire.
+
+1. Importer le dépôt sur [vercel.com/new](https://vercel.com/new). Le framework et la commande `npm run build` sont détectés.
+2. Dans *Settings → Environment Variables*, ajouter `OPENROUTER_API_KEY` (et, au besoin, les autres clés listées dans `.env.example`). Elles sont facultatives : sans elles, l'utilisateur saisit sa clé dans la fenêtre de réglages.
+3. Chaque push crée un déploiement de prévisualisation ; la branche par défaut part en production.
+
+En ligne de commande : `npx vercel` (prévisualisation) puis `npx vercel --prod`.
+
 ## Organisation
 
 - `src/routes/index.tsx` : la page (formulaire et affichage des citations)

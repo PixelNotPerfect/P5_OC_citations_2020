@@ -27,7 +27,7 @@ export class Citation {
 
     generate(titre, citations) {
         const number = parseInt(document.getElementById("number").value, 10);
-        if (number == NaN || number <= 0 || number > 10) {
+        if (Number.isNaN(number) || number <= 0 || number > 10) {
             document.getElementById('error').innerText = 'Veuillez saisir un nombre entier compris entre 1 et 10 inclus.';
             console.log(typeof number, number);
             return;
